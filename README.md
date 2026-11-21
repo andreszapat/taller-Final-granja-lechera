@@ -3,7 +3,7 @@
 **Asignatura:** Lenguajes de Programación  
 **Docente:** Camilo Ernesto Charry Caicedo  
 **Fecha de la guía:** 20 de noviembre de 2026  
-**Tecnologías:** ASP.NET Core / .NET 10, C#, Entity Framework Core, SQLite, AutoMapper 17, Swagger/OpenAPI y xUnit.
+**Tecnologías:** ASP.NET Core / .NET 10, C#, Entity Framework Core 10.0.15, SQLite, AutoMapper 17, Swagger/OpenAPI y xUnit.
 
 ## 1. ¿Qué hace el sistema?
 
@@ -38,7 +38,7 @@ dotnet run --project Granja.Web --urls http://localhost:5000
 - La base de datos SQLite `granja.db` se crea automáticamente al arrancar por primera vez. EF Core aplica la migración `Inicial` y carga datos de referencia (10 vacas, 15 L por vaca, queso 10 L/kg con vida 30 días y precio $28.000 COP/kg, yogurt 1 L/L con vida 15 días y precio de ejemplo $6.000 COP/L).
 - Para empezar un **escenario limpio**, detener el servidor, eliminar el archivo `granja.db` si es una base de pruebas, y volver a arrancar. **Esto elimina todos los datos guardados; no hacerlo con datos reales.**
 
-**Alternativa para migraciones manuales:** si dispone de `dotnet-ef` y desea inspeccionar el estado, ejecute `dotnet ef migrations list --project Granja.Infrastructure --startup-project Granja.Web`. El proyecto ya contiene una migración inicial escrita para SQLite.
+**Alternativa para migraciones manuales:** si dispone de `dotnet-ef` y desea inspeccionar el estado, ejecute `dotnet ef migrations list --project Granja.Infrastructure --startup-project Granja.Web`. El proyecto ya contiene una migración inicial escrita para SQLite. **Nota técnica:** por ser manual, su snapshot no fue generado por la herramienta de EF; en `Granja.Web/Program.cs` se omite únicamente la alerta `PendingModelChangesWarning` para que `MigrateAsync` siga aplicando y registrando la migración. Si se modifica el modelo posteriormente, hay que generar migraciones nuevas con EF Core, no dejar esta omisión como solución de producción.
 
 **Licencia de AutoMapper:** la versión 17 registra avisos si falta una clave de licencia; esos avisos no bloquean la ejecución técnica, pero debe revisarse el tipo de licencia aplicable antes de distribuir o utilizar comercialmente la aplicación.
 
@@ -198,3 +198,11 @@ Los precios iniciales (28.000 COP/kg de queso y 6.000 COP/L de yogurt) son datos
 5. Código con las pruebas unitarias del punto 9 y el reporte de vacas adicional del punto 6.2 (incluidos; **resultados de ejecución pendientes de comprobar con el SDK .NET 10**).
 
 La guía **no exige capturas de pantalla, presentación en PowerPoint ni PDF de respuestas**. Sí califica la capacidad de **sustentar** las decisiones técnicas. La publicación en un servicio de Git remoto requiere una cuenta o acceso del estudiante; este paquete contiene un repositorio local con historial, **no** un enlace a un repositorio remoto. Antes de enviarlo, se necesita compilar, probar, ejecutar las solicitudes de referencia y publicar el repositorio según las instrucciones del docente o de la plataforma.
+
+## Corrección del error de inicio comunicada por el estudiante
+
+- Se corrigió el error `CS0118` de la interfaz `IGranjaRepository` (referencia explícita al tipo `Granja`).
+- La versión original detenía `DbSeeder.InicializarAsync` en `MigrateAsync` por `PendingModelChangesWarning`: la migración y el snapshot eran manuales. Se mantuvo `MigrateAsync` y se añadió una excepción explícita **solo a ese diagnóstico**, con una prueba de integración que ejecuta la migración sobre SQLite en memoria.
+- Se actualizaron las referencias de EF Core de 10.0.0 a 10.0.15, versión de mantenimiento de .NET 10. Esto permite resolver dependencias SQLite más recientes; el resultado exacto de la auditoría de NuGet se confirma en el computador durante `restore`.
+- **No se verificó compilación ni ejecución en este entorno** porque no dispone de SDK .NET ni acceso a NuGet. En Visual Studio: abra la solución extraída, establezca `Granja.Web` como proyecto de inicio, elija `Compilar > Recompilar solución`, use `Prueba > Ejecutar todas las pruebas` y luego inicie con F5.
+- **Si conservas datos que te interesan en `granja.db`, haz una copia antes de sustituir el proyecto.** No es necesario eliminar esa base de datos para aplicar este cambio; el archivo no se incluye en el ZIP.

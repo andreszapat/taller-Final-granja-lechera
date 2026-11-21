@@ -3,7 +3,7 @@ using Granja.Domain.Enums;
 namespace Granja.Domain.Interfaces;
 public interface IClock { DateOnly Today { get; } }
 public interface IUnitOfWork { Task<int> SaveChangesAsync(CancellationToken ct = default); }
-public interface IGranjaRepository { Task<Granja?> ObtenerAsync(CancellationToken ct = default); }
+public interface IGranjaRepository { Task<global::Granja.Domain.Entities.Granja?> ObtenerAsync(CancellationToken ct = default); }
 public interface IVacaRepository
 {
     Task<List<Vaca>> ListarAsync(CancellationToken ct = default);

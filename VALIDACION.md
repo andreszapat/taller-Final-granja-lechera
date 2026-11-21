@@ -30,3 +30,15 @@ Usar Swagger en `/swagger` o `Granja.http` y comprobar las respuestas contra la 
 ## Alcance de las conclusiones
 
 Las cifras de referencia se pueden verificar aritméticamente con los datos del enunciado. La validación estática de archivos y cálculos **no equivale** a una compilación, a pruebas HTTP reales ni a una evaluación del profesor.
+
+## Corrección de fallo real detectado en Visual Studio (20/11/2026)
+
+Captura: `System.InvalidOperationException` al iniciar, `PendingModelChangesWarning`, llamado desde `DbSeeder.InicializarAsync` y `Program.cs`. La migración inicial fue escrita a mano: su snapshot no es del diseñador de EF Core.
+
+**Modificaciones incorporadas:**
+- `Granja.Web/Program.cs`: se omite el diagnóstico de divergencia del snapshot manual, sin omitir la aplicación de migraciones (`MigrateAsync` sigue en `DbSeeder`). Es una excepción documentada para el taller, **no** sustituye una migración regenerada por EF en un proyecto en evolución.
+- `Granja.Domain/Interfaces/IRepositorio.cs`: se desambigua la entidad `Granja` para resolver el CS0118 que apareció antes.
+- `Granja.Infrastructure/Granja.Infrastructure.csproj` y `Granja.Tests/Granja.Tests.csproj`: EF Core 10.0.15.
+- `Granja.Tests/ReglasNegocioTests.cs`: prueba `MigracionInicialTests.LaMigracionInicialPermiteArrancarYSembrarLaGranja()` verifica aplicación y registro de la migración inicial real, seeding y segunda inicialización.
+
+**Estado honesto de la verificación:** se validó con SQLite estándar que las instrucciones SQL de migración se pueden ejecutar y que se crean las tablas, índices y claves foráneas; esta comprobación **no** equivale a ejecutar ASP.NET Core o xUnit. Falta ejecutar en Visual Studio la prueba de integración, compilar y revisar NuGet.

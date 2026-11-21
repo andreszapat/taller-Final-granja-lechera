@@ -202,3 +202,28 @@ public sealed class ReglasNegocioTests : IAsyncLifetime
         Assert.Equal(0m, leche[0].LitrosNoAprovechados);
     }
 }
+
+// Prueba de integración específica para el error reportado al arrancar Granja.Web.
+public sealed class MigracionInicialTests
+{
+    [Fact]
+    public async Task LaMigracionInicialPermiteArrancarYSembrarLaGranja()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<GranjaDbContext>()
+            .UseSqlite(connection)
+            .ConfigureWarnings(w => w.Ignore(
+                Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
+            .Options;
+        await using var db = new GranjaDbContext(options);
+        await DbSeeder.InicializarAsync(db);
+        Assert.Contains("20261120000000_Inicial", await db.Database.GetAppliedMigrationsAsync());
+        Assert.Equal(1, await db.Granjas.CountAsync());
+        Assert.Equal(10, await db.Vacas.CountAsync());
+        Assert.Equal(2, await db.ConfiguracionesProducto.CountAsync());
+        // La inicialización debe poder repetirse sin duplicar filas.
+        await DbSeeder.InicializarAsync(db);
+        Assert.Equal(10, await db.Vacas.CountAsync());
+    }
+}

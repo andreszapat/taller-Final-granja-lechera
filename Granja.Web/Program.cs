@@ -18,8 +18,15 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GranjaExceptionHandler>();
+// La migración Inicial del taller se escribió manualmente y ya define el esquema SQLite.
+// Su snapshot manual no contiene todos los metadatos del diseñador de EF Core 10;
+// la discrepancia ocasiona PendingModelChangesWarning aunque las tablas estén definidas.
+// Se mantiene MigrateAsync para aplicar y registrar la migración (NO se usa EnsureCreated
+// en el arranque). Regenerar el snapshot con 'dotnet ef migrations add' si cambia el modelo.
 builder.Services.AddDbContext<GranjaDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Granja") ?? "Data Source=granja.db"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("Granja") ?? "Data Source=granja.db")
+        .ConfigureWarnings(warnings => warnings.Ignore(
+            Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IClock, SystemClock>();
