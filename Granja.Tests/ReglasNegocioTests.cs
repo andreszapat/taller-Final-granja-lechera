@@ -87,9 +87,14 @@ public sealed class ReglasNegocioTests : IAsyncLifetime
         Assert.Equal(150m, r.TotalLitros);
         var reporte = await _reportes.VacasAsync();
         Assert.Equal(15m, reporte.PromedioGeneralPorVaca);
+        Assert.Equal(10, reporte.Vacas.Count);
         Assert.Single(reporte.MayorProduccion);
+        Assert.Equal("V0001", reporte.MayorProduccion[0].Codigo);
         Assert.Equal(16m, reporte.MayorProduccion[0].PromedioLitrosPorDia);
-        Assert.Equal(14m, Assert.Single(reporte.PorDebajoDelPromedio).PromedioLitrosPorDia);
+        Assert.Single(reporte.MenorProduccion);
+        Assert.Equal("V0002", reporte.MenorProduccion[0].Codigo);
+        Assert.Equal(14m, reporte.MenorProduccion[0].PromedioLitrosPorDia);
+        Assert.Equal("V0002", Assert.Single(reporte.PorDebajoDelPromedio).Codigo);
     }
     [Fact]
     public async Task NoSePuedeTransformarLecheInexistente()

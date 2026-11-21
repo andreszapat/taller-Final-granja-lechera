@@ -86,3 +86,17 @@ PUT {{base}}/api/granja
 Content-Type: application/json
 
 {"numeroVacas":10,"litrosPorVaca":15,"queso":{"rendimientoLitrosPorUnidad":10,"vidaUtilDias":30,"precioUnitario":28000},"yogurt":{"rendimientoLitrosPorUnidad":1,"vidaUtilDias":15,"precioUnitario":6000}}
+
+
+### 20. Ejemplo aislado del reporte de vacas (requisito de la página 6)
+### Ejecutar DESPUÉS del escenario principal y con la base de datos recién inicializada.
+### Sembrado inicial: vacas con Id 1 a 10, en ese orden.
+### Distribución 16 + 14 + (8 x 15) = 150 L.
+POST {{base}}/api/produccion/leche
+Content-Type: application/json
+
+{"fecha":"2026-12-18","vacas":[{"vacaId":1,"litros":16},{"vacaId":2,"litros":14},{"vacaId":3,"litros":15},{"vacaId":4,"litros":15},{"vacaId":5,"litros":15},{"vacaId":6,"litros":15},{"vacaId":7,"litros":15},{"vacaId":8,"litros":15},{"vacaId":9,"litros":15},{"vacaId":10,"litros":15}]}
+
+### 21. Verificar promedio general 15 L, mayor V0001 (16 L), menor V0002 (14 L)
+### y vacas por debajo del promedio: V0002 solamente.
+GET {{base}}/api/reportes/vacas?desde=2026-12-18&hasta=2026-12-18

@@ -42,6 +42,23 @@ dotnet run --project Granja.Web --urls http://localhost:5000
 
 **Licencia de AutoMapper:** la versión 17 registra avisos si falta una clave de licencia; esos avisos no bloquean la ejecución técnica, pero debe revisarse el tipo de licencia aplicable antes de distribuir o utilizar comercialmente la aplicación.
 
+## Modelo del dominio (apartado 5 de la guía)
+
+El código completa y adapta el diagrama inicial de la página 4. Estas son las entidades con sus atributos principales (algunos atributos auxiliares de persistencia no se muestran):
+
+| Entidad | Atributos principales y función |
+|---|---|
+| `Granja` | `Id`, `NumeroVacas`, `LitrosPorVaca`: configuración de n y l. |
+| `Vaca` | `Id`, `Codigo`, `Nombre`, `Activa`: individualiza a las vacas para sus informes. |
+| `ProduccionLeche` | `Id`, `VacaId`, `Fecha`, `Litros`: litros diarios por vaca, sin registros repetidos. |
+| `ConfiguracionProducto` | `Tipo`, `RendimientoLitrosPorUnidad`, `VidaUtilDias`, `PrecioUnitario`: parámetros editables. |
+| `Transformacion` | `Id`, `Fecha`, `Tipo`, `LitrosUsados`, `CantidadObtenida`: leche convertida en producto. |
+| `LoteProducto` | `Id`, `TransformacionId`, `Tipo`, `FechaProduccion`, `FechaVencimiento`, `CantidadInicial`, `CantidadDisponible`, `CantidadDanada`: inventario por lote. |
+| `Venta` | `Id`, `Fecha`, `Tipo`, `Cantidad`, `PrecioUnitario`, `Total`: venta registrada. |
+| `VentaDetalle` | `Id`, `VentaId`, `LoteId`, `FechaProduccion`, `Cantidad`: salida FIFO de cada lote. |
+
+**Relaciones:** una granja configura sus vacas; una vaca tiene muchos registros de producción; cada transformación origina un lote; una venta contiene uno o más detalles y cada detalle identifica el lote que suministró el producto. Las operaciones transforman la leche de una fecha sin almacenar leche no utilizada como inventario.
+
 ## 4. API: rutas y métodos
 
 | Método | Ruta | Función |
@@ -110,6 +127,25 @@ Se calcula el promedio **por día registrado de cada vaca** (sumatoria de litros
 
 Ejemplo de producción diferenciada con `POST /api/produccion/leche`: 16 L para la primera vaca, 14 L para la segunda y 15 L para las 8 restantes. Total = 150 L; promedio = 15 L, mayor = 16 L, menor = 14 L y solo la segunda queda por debajo de la media.
 
+### Comprobación concreta del reporte de vacas (página 6)
+
+El archivo `Granja.http` contiene, después del escenario principal, dos solicitudes que demuestran el informe adicional. Utilice la base recién inicializada. La primera registra el día **2026-12-18** con 10 vacas: V0001 = 16 L, V0002 = 14 L y las otras ocho = 15 L cada una. La suma es **150 L**, respetando `n × l`. La segunda solicita el informe filtrado a ese día:
+
+```http
+GET http://localhost:5000/api/reportes/vacas?desde=2026-12-18&hasta=2026-12-18
+```
+
+**Resultado matemáticamente esperado (no presentado como ejecución verificada):**
+
+| Indicador solicitado por el docente | Resultado esperado |
+|---|---|
+| Promedio de producción por vaca | **15 L/día** |
+| Vaca que más produce | **V0001**, 16 L/día |
+| Vaca que menos produce | **V0002**, 14 L/día |
+| Vacas por debajo del promedio | **V0002**, 14 L/día |
+
+En el ejemplo del escenario principal (días 1 y 2), las diez vacas registran 15 L diarios y **todas empatan** como mayor y menor producción; no hay ninguna por debajo del promedio. El ejemplo adicional demuestra también el caso en que sí hay diferencias. La prueba `ProduccionPorVacaEsUnicaYDebeSumarNxL` compara este mismo resultado y comprueba los cuatro requisitos.
+
 ## 8. Validaciones y errores
 
 - `400 Bad Request`: producto inválido, parámetros negativos, fecha mal formada, entradas de vacas incompletas o litros diarios que no suman n×l.
@@ -150,3 +186,15 @@ Después cree un repositorio en GitHub o en el servicio indicado por el profesor
 ## 11. Nota sobre decisiones que no estaban completamente fijadas en la guía
 
 Los precios iniciales (28.000 COP/kg de queso y 6.000 COP/L de yogurt) son datos de ejemplo para reproducir la venta de la página 6; el docente exige que sean configurables. El texto que aparece junto al diagrama en la página 4 menciona dos semanas, mientras que la tabla de la página 2 y el escenario de prueba usan 30 días para queso y 15 para yogurt: se aplicó la tabla y ambos valores permanecen configurables. Las extensiones opcionales (alertas, exportación CSV/Excel y paginación avanzada) **no están incluidas** para priorizar el alcance obligatorio.
+
+## 12. ¿Qué se entrega según el punto 10 de la guía?
+
+**El entregable académico es el repositorio Git con el código fuente de la solución**, no un PDF de respuestas. El repositorio debe incluir:
+
+1. Los cuatro proyectos obligatorios (`Domain`, `Infrastructure`, `Services`, `Web`) y `Granja.Tests` (en este paquete se incluyen).
+2. La configuración de Entity Framework Core, SQLite y la migración inicial (incluidas).
+3. Swagger/OpenAPI y manejo de errores (incluidos en el proyecto Web; **ejecución aún no validada**).
+4. Un `README.md` con instrucciones y una colección de pruebas (`Granja.http`) (incluidos).
+5. Código con las pruebas unitarias del punto 9 y el reporte de vacas adicional del punto 6.2 (incluidos; **resultados de ejecución pendientes de comprobar con el SDK .NET 10**).
+
+La guía **no exige capturas de pantalla, presentación en PowerPoint ni PDF de respuestas**. Sí califica la capacidad de **sustentar** las decisiones técnicas. La publicación en un servicio de Git remoto requiere una cuenta o acceso del estudiante; este paquete contiene un repositorio local con historial, **no** un enlace a un repositorio remoto. Antes de enviarlo, se necesita compilar, probar, ejecutar las solicitudes de referencia y publicar el repositorio según las instrucciones del docente o de la plataforma.

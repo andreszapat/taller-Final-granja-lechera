@@ -6,9 +6,11 @@
 - Se modelaron 4 proyectos de arquitectura más 1 de pruebas.
 - Se añadieron todos los endpoints de reportes de la página 6 y el reporte de vacas adicional.
 - Se incluyó migración inicial, SQLite, repositorios, IUnitOfWork, IClock, AutoMapper, Swagger y ProblemDetails.
-- Se añadieron solicitudes `.http` ordenadas para repetir el escenario de referencia de las páginas 7 y 8.
-- Las pruebas xUnit contienen los supuestos y las cifras esperadas del escenario de la guía.
-- Se revisaron los archivos de proyecto, referencias y JSON con herramientas locales de lectura.
+- Se añadieron solicitudes `.http` ordenadas para repetir el escenario de referencia de las páginas 7 y 8, más un escenario independiente de vacas con producción distinta para demostrar el reporte solicitado en la página 6.
+- Las pruebas xUnit contienen los supuestos y las cifras esperadas del escenario de la guía, y verifican mayor, menor, promedio y vacas bajo promedio.
+- Se revisaron los archivos de proyecto y sus referencias, los archivos JSON y la estructura de carpetas.
+- Se ejecutó el SQL de la migración inicial en SQLite en memoria; se crearon las ocho tablas esperadas y se comprobó que el índice único impide duplicar producción para una vaca en la misma fecha.
+- Se verificaron mediante operaciones matemáticas independientes los resultados del escenario de referencia y el ejemplo de vacas (16, 14 y 8 veces 15 L).
 
 ## Restricción de verificación
 
