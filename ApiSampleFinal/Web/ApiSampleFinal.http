@@ -1,0 +1,134 @@
+@host = http://localhost:5081
+
+### ===== Configuración =====
+GET {{host}}/api/granja
+
+### Actualizar n, l y parámetros por producto
+PUT {{host}}/api/granja
+Content-Type: application/json
+
+{
+  "nombre": "Granja Lechera USC",
+  "numeroVacas": 10,
+  "litrosPorVaca": 15,
+  "productos": [
+    { "tipoProducto": "Queso",  "unidad": "kg", "litrosPorUnidad": 10, "vidaUtilDias": 30, "precio": 28000 },
+    { "tipoProducto": "Yogurt", "unidad": "L",  "litrosPorUnidad": 1,  "vidaUtilDias": 15, "precio": 6000 }
+  ]
+}
+
+### Vacas
+GET {{host}}/api/vacas
+
+### ===== Escenario de referencia (punto 8) =====
+### Día 1: producción (10 × 15 = 150 L)
+POST {{host}}/api/produccion
+Content-Type: application/json
+
+{ "fecha": "2026-12-01" }
+
+### Día 1: 100 L → queso (Q1 = 10 kg)
+POST {{host}}/api/produccion/transformaciones
+Content-Type: application/json
+
+{ "fecha": "2026-12-01", "tipoProducto": "Queso", "litros": 100 }
+
+### Día 1: 50 L → yogurt (Y1 = 50 L, vence 2026-12-16)
+POST {{host}}/api/produccion/transformaciones
+Content-Type: application/json
+
+{ "fecha": "2026-12-01", "tipoProducto": "Yogurt", "litros": 50 }
+
+### Día 2: producción con ajustes por vaca (vaca 1 produjo 20 L, vaca 2 produjo 10 L)
+POST {{host}}/api/produccion
+Content-Type: application/json
+
+{ "fecha": "2026-12-02", "ajustes": [ { "vacaId": 1, "litros": 20 }, { "vacaId": 2, "litros": 10 } ] }
+
+### Día 2: 150 L → queso (Q2 = 15 kg)
+POST {{host}}/api/produccion/transformaciones
+Content-Type: application/json
+
+{ "fecha": "2026-12-02", "tipoProducto": "Queso", "litros": 150 }
+
+### Día 3: venta de 12 kg de queso (10 de Q1 + 2 de Q2)
+POST {{host}}/api/ventas
+Content-Type: application/json
+
+{ "tipoProducto": "Queso", "cantidad": 12, "fecha": "2026-12-03" }
+
+### Día 3: venta de 20 L de yogurt
+POST {{host}}/api/ventas
+Content-Type: application/json
+
+{ "tipoProducto": "Yogurt", "cantidad": 20, "fecha": "2026-12-03" }
+
+### Día 17: procesar vencimientos (Y1 → 30 L dañados)
+POST {{host}}/api/inventario/procesar-vencimientos
+Content-Type: application/json
+
+{ "fecha": "2026-12-17" }
+
+### Día 17: venta de 5 L de yogurt → 409 Conflict
+POST {{host}}/api/ventas
+Content-Type: application/json
+
+{ "tipoProducto": "Yogurt", "cantidad": 5, "fecha": "2026-12-17" }
+
+### ===== Consultas =====
+GET {{host}}/api/produccion?desde=2026-12-01&hasta=2026-12-31
+
+###
+GET {{host}}/api/produccion/2026-12-01
+
+###
+GET {{host}}/api/inventario?fecha=2026-12-03&incluirAgotados=true
+
+###
+GET {{host}}/api/inventario/proximos-a-vencer?dias=3&fecha=2026-12-14
+
+###
+GET {{host}}/api/ventas/1
+
+### ===== Reportes =====
+GET {{host}}/api/reportes/ventas?desde=2026-12-01&hasta=2026-12-31
+
+###
+GET {{host}}/api/reportes/ventas?desde=2026-12-01&hasta=2026-12-31&tipo=Queso
+
+###
+GET {{host}}/api/reportes/leche-diaria?desde=2026-12-01&hasta=2026-12-31
+
+###
+GET {{host}}/api/reportes/producto-diario?desde=2026-12-01&hasta=2026-12-31
+
+###
+GET {{host}}/api/reportes/producto-total
+
+###
+GET {{host}}/api/reportes/producto-danado?desde=2026-12-01&hasta=2026-12-31
+
+###
+GET {{host}}/api/reportes/vacas?desde=2026-12-01&hasta=2026-12-31
+
+### ===== Errores esperados =====
+### 409: producción duplicada
+POST {{host}}/api/produccion
+Content-Type: application/json
+
+{ "fecha": "2026-12-01" }
+
+### 409: más litros de los disponibles
+POST {{host}}/api/produccion/transformaciones
+Content-Type: application/json
+
+{ "fecha": "2026-12-01", "tipoProducto": "Queso", "litros": 10 }
+
+### 400: validación
+POST {{host}}/api/ventas
+Content-Type: application/json
+
+{ "tipoProducto": "Leche", "cantidad": -1 }
+
+### 404: venta inexistente
+GET {{host}}/api/ventas/999

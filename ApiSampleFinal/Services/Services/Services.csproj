@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.15" />
+  </ItemGroup>
+
+  <!-- Los servicios dependen solo de las abstracciones del dominio (interfaces de repositorio,
+       IUnitOfWork, IClock). La implementación la inyecta Web desde Infrastructure. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Domain\Domain.csproj" />
+  </ItemGroup>
+
+</Project>
